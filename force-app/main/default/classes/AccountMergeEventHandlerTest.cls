@@ -1,55 +1,69 @@
 @isTest
 public class AccountMergeEventHandlerTest {
 
-    private static List<Account> accts;
-    private static List<EventBusSubscriber> eventBusSubs;
-    private static Database.MergeResult mergeResults;
+    private static Account winnerAcct;
+    private static List<Account> loserAccts;
+    private static List<Database.MergeResult> mergeResults;
 
     @TestSetup static void createAccounts() {
-        accts = new List<Account> {
+
+        mergeResults = new List<Database.MergeResult>();
+
+        winnerAcct = new Account(
+            Name = 'Winner',
+            RecordTypeId = [SELECT Id FROM RecordType WHERE SobjectType = 'Account' AND Name = 'Organization'][0].Id,
+            Type = 'Investment Company',
+            CurrencyISOCode = 'USD'
+            );
+
+        loserAccts = new List<Account> {
             new Account(
-            Name = 'Loser',
+            Name = 'Loser1',
             RecordTypeId = [SELECT Id FROM RecordType WHERE SobjectType = 'Account' AND Name = 'Organization'][0].Id,
             Type = 'Investment Company',
             CurrencyISOCode = 'USD'
             ),
             new Account(
-            Name = 'Winner',
+            Name = 'Loser2',
             RecordTypeId = [SELECT Id FROM RecordType WHERE SobjectType = 'Account' AND Name = 'Organization'][0].Id,
             Type = 'Investment Company',
             CurrencyISOCode = 'USD'
             )
         };
+
         try {
-            insert accts;
-        } catch (DmlException e) {
-            System.debug(e.getMessage());
+            insert winnerAcct;
+            insert loserAccts;
+        } catch (Exception e) {
+            System.debug('ERROR! Exception on Account insert: ' + e.getTypeName() + ' - ' + e.getMessage());
         }
     }
     
     @isTest
     static void testHandleMerge() {
 
-        // Create and insert 2 Accounts: one to be merged and one to be the master
-        createAccounts();
-
         Test.startTest();
-        
+
         try {
-            mergeResults = Database.merge(accts[1],accts[0]);
-        } catch(DmlException e) {
-            System.debug(e.getMessage());
+            mergeResults = Database.merge(winnerAcct, loserAccts);
+        } catch(Exception e) {
+            System.debug('ERROR! Exception on Account merge: ' + e.getTypeName() + ' - ' + e.getMessage());
+            Test.stopTest();
         }
 
-        System.assert(mergeResults.isSuccess(), 'Merge was not a success');
+        if (Test.isRunningTest()) {
 
-        System.assert(AccountMergeEventHandler.mergeEvents.size() > 0, 'Event not published');
+            System.assert(AccountMergeEventHandler.testMergeEvents.size() > 0, 'Events not published');
 
-        for (MergeEvent__e mergeEvent : AccountMergeEventHandler.mergeEvents) {
-            System.assert(mergeEvent.MasterRecordID__c != null, 'MasterRecordId not published on event');
+            for (Database.MergeResult mergeResult : mergeResults) {
+                System.assert(mergeResult.isSuccess(), 'Merge was not a success');
+            }
+    
+            for (MergeEvent__e mergeEvent : AccountMergeEventHandler.testMergeEvents) {
+                System.assert(mergeEvent.MasterRecordID__c != null, 'MasterRecordId not published on event');
+            }
+    
+            Test.stopTest();
         }
-
-        Test.stopTest();
-
     }
 }

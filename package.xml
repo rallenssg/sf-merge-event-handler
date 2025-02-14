@@ -9,7 +9,7 @@
         <name>ApexClass</name>
     </types>
     <types>
-        <members>AccountTrigger_AfterDelete</members>
+        <members>AccountTrigger</members>
         <name>ApexTrigger</name>
     </types>
     <types>
