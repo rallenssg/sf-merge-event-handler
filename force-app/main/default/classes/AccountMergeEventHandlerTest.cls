@@ -1,69 +1,101 @@
 @isTest
 public class AccountMergeEventHandlerTest {
+  private static Account winnerAcct = new Account();
+  private static List<Account> loserAccts = new List<Account>();
 
-    private static Account winnerAcct;
-    private static List<Account> loserAccts;
-    private static List<Database.MergeResult> mergeResults;
+  private static void createAccounts() {
+    winnerAcct = new Account(
+      Name = 'Winner',
+      RecordTypeId = [
+        SELECT Id
+        FROM RecordType
+        WHERE SobjectType = 'Account' AND Name = 'Organization'
+      ][0]
+      .Id,
+      Type = 'Investment Company',
+      CurrencyISOCode = 'USD'
+    );
 
-    @TestSetup static void createAccounts() {
+    loserAccts = new List<Account>{
+      new Account(
+        Name = 'Loser1',
+        RecordTypeId = [
+          SELECT Id
+          FROM RecordType
+          WHERE SobjectType = 'Account' AND Name = 'Organization'
+        ][0]
+        .Id,
+        Type = 'Investment Company',
+        CurrencyISOCode = 'USD'
+      ),
+      new Account(
+        Name = 'Loser2',
+        RecordTypeId = [
+          SELECT Id
+          FROM RecordType
+          WHERE SobjectType = 'Account' AND Name = 'Organization'
+        ][0]
+        .Id,
+        Type = 'Investment Company',
+        CurrencyISOCode = 'USD'
+      )
+    };
 
-        mergeResults = new List<Database.MergeResult>();
-
-        winnerAcct = new Account(
-            Name = 'Winner',
-            RecordTypeId = [SELECT Id FROM RecordType WHERE SobjectType = 'Account' AND Name = 'Organization'][0].Id,
-            Type = 'Investment Company',
-            CurrencyISOCode = 'USD'
-            );
-
-        loserAccts = new List<Account> {
-            new Account(
-            Name = 'Loser1',
-            RecordTypeId = [SELECT Id FROM RecordType WHERE SobjectType = 'Account' AND Name = 'Organization'][0].Id,
-            Type = 'Investment Company',
-            CurrencyISOCode = 'USD'
-            ),
-            new Account(
-            Name = 'Loser2',
-            RecordTypeId = [SELECT Id FROM RecordType WHERE SobjectType = 'Account' AND Name = 'Organization'][0].Id,
-            Type = 'Investment Company',
-            CurrencyISOCode = 'USD'
-            )
-        };
-
-        try {
-            insert winnerAcct;
-            insert loserAccts;
-        } catch (Exception e) {
-            System.debug('ERROR! Exception on Account insert: ' + e.getTypeName() + ' - ' + e.getMessage());
-        }
+    try {
+      insert winnerAcct;
+      insert loserAccts;
+    } catch (Exception e) {
+      System.debug(
+        'ERROR! Exception on Account insert: ' +
+          e.getTypeName() +
+          ' - ' +
+          e.getMessage()
+      );
     }
-    
-    @isTest
-    static void testHandleMerge() {
+  }
 
-        Test.startTest();
+  @isTest
+  static void testHandleMerge() {
+    List<Database.MergeResult> mergeResults = new List<Database.MergeResult>();
 
-        try {
-            mergeResults = Database.merge(winnerAcct, loserAccts);
-        } catch(Exception e) {
-            System.debug('ERROR! Exception on Account merge: ' + e.getTypeName() + ' - ' + e.getMessage());
-            Test.stopTest();
-        }
+    createAccounts();
 
-        if (Test.isRunningTest()) {
+    Test.startTest();
 
-            System.assert(AccountMergeEventHandler.testMergeEvents.size() > 0, 'Events not published');
-
-            for (Database.MergeResult mergeResult : mergeResults) {
-                System.assert(mergeResult.isSuccess(), 'Merge was not a success');
-            }
-    
-            for (MergeEvent__e mergeEvent : AccountMergeEventHandler.testMergeEvents) {
-                System.assert(mergeEvent.MasterRecordID__c != null, 'MasterRecordId not published on event');
-            }
-    
-            Test.stopTest();
-        }
+    try {
+      mergeResults = Database.merge(winnerAcct, loserAccts);
+    } catch (Exception e) {
+      System.debug(
+        'ERROR! Exception on Account merge: ' +
+          e.getTypeName() +
+          ' - ' +
+          e.getMessage()
+      );
+      System.assert(false, 'Merge failed!');
     }
+
+    Test.stopTest();
+
+    for (Database.MergeResult mergeResult : mergeResults) {
+      System.assert(mergeResult.isSuccess(), 'Merge was not a success');
+    }
+
+    System.assert(
+      AccountMergeEventHandler.testMergeEvents.size() > 0,
+      'Events not published'
+    );
+    System.assertEquals(
+      loserAccts.size(),
+      AccountMergeEventHandler.testMergeEvents.size(),
+      'Mismatch in expected vs. actual published events'
+    );
+
+    for (MergeEvent__e mergeEvent : AccountMergeEventHandler.testMergeEvents) {
+      System.assertEquals(
+        winnerAcct.Id,
+        mergeEvent.MasterRecordID__c,
+        'Incorrect MasterRecordId published'
+      );
+    }
+  }
 }

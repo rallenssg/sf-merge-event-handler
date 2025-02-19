@@ -1,7 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
     <deploymentStatus>Deployed</deploymentStatus>
-    <description>Custom Event for merging Accounts. Accomplished with APEX</description>
+    <description
+  >Custom Event for merging Objects. Accomplished with APEX. Must implement Trigger to create MergeEvent__e per Object.</description>
     <eventType>HighVolume</eventType>
     <label>Merge Event</label>
     <pluralLabel>Merge Events</pluralLabel>
