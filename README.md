@@ -8,11 +8,16 @@
 >
 > > <ins>Fields:</ins>
 > >
-> > > _ObjectName\_\_c_: Text(255)\n*MasterRecordID\_\_c*: Text(18)\n*MergedRecordID\_\_c*: Text(18)\n*MergedAt\_\_c*: DateTime
+> > > _ObjectName\_\_c_: Text(255)  
+> > > _MasterRecordID\_\_c_: Text(18)  
+> > > _MergedRecordID\_\_c_: Text(18)  
+> > > _MergedAt\_\_c_: DateTime
 
 ### Apex
 
-> **AccountTrigger** \n **AccountMergeEventHandler** \n **AccountMergeEventHandlerTest**
+> **AccountTrigger**  
+> **AccountMergeEventHandler**  
+> **AccountMergeEventHandlerTest**
 
 ## Description
 
