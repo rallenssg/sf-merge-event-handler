@@ -1,18 +1,25 @@
-# Salesforce DX Project: Next Steps
+# Modular Record Merge Custom Platform Event
 
-Now that you’ve created a Salesforce DX project, what’s next? Here are some documentation resources to get you started.
+## Components
 
-## How Do You Plan to Deploy Your Changes?
+### Custom Platform Event
 
-Do you want to deploy a set of changes, or create a self-contained application? Choose a [development model](https://developer.salesforce.com/tools/vscode/en/user-guide/development-models).
+> **MergeEvent\_\_e**
+>
+> > <ins>Fields:</ins>
+> >
+> > > _ObjectName\_\_c_: Text(255)
+> > > _MasterRecordID\_\_c_: Text(18)
+> > > _MergedRecordID\_\_c_: Text(18)
+> > > _MergedAt\_\_c_: DateTime
 
-## Configure Your Salesforce DX Project
+### Apex
 
-The `sfdx-project.json` file contains useful configuration information for your project. See [Salesforce DX Project Configuration](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_ws_config.htm) in the _Salesforce DX Developer Guide_ for details about this file.
+> **AccountTrigger** > **AccountMergeEventHandler** > **AccountMergeEventHandlerTest**
 
-## Read All About It
+## Description
 
-- [Salesforce Extensions Documentation](https://developer.salesforce.com/tools/vscode/)
-- [Salesforce CLI Setup Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_setup.meta/sfdx_setup/sfdx_setup_intro.htm)
-- [Salesforce DX Developer Guide](https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_intro.htm)
-- [Salesforce CLI Command Reference](https://developer.salesforce.com/docs/atlas.en-us.sfdx_cli_reference.meta/sfdx_cli_reference/cli_reference.htm)
+The custom Merge Event object can be used on any object by triggering Apex after delete and in the case of a delete,
+in a Handler class, check if the MasterRecordId on the deleted record is not null, indicating a merge. If populated,
+create new MergeEvent**e record populating the ObjectName**c, current time for MergedAt**c, the delted record Id for
+MergedRecordID**c, and the MasterRecordId from the deleted record for MasterRecordID\_\_c.
